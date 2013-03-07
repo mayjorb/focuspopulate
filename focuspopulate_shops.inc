@@ -104,62 +104,29 @@ switch ($sport) {
   
   case 'surf':
     $tid = 12; // term ID from focus_sport taxonomy
-    //start building search
 
+    //start building search
     $googlePlaces->setQuery('surfshop, surfboards');
     $googlePlaces->setTypes('store'); //$circle_radius = focuspopulate_miles_to_meters($radius);
     $googlePlaces->setRadius($radius);
 
     $gresults = $googlePlaces->textSearch();
 
-    dpm($gresults['results'], 'google places results');
-
-    //dpm($gresults['status'], 'google places status');
-    
     break;
 }
 
-
-$places = array();
-foreach ($result as $record) {
-  $places['place_id'][] = $record->place_id;
-  $places['reference_id'][] = $record->reference_id;
-}
-
-
-//$result->fetchAll();
-// $field = 'place_id';
-// $result->fetchAllAssoc($field);
-
-//$result->fetchCol();
-
-// $record = $query->fetchAssoc();
-
-//$record = $result->fetchField($column_index);
-
-//$record = $query->fetchField(0);
-
-
-// foreach ($results as $result) {
-//     $existing_nodes[$result->nid] = $result->field_places_id_value;
-//   }
-
-dpm($places, 'existing google places');
-
 if ($gresults['status'] == 'OK') {
 
-  foreach ($gresults['results'] as $value) { // remove subscribed shops from factual list
+  // Get an associative array of places_id's.
+  $existingnodes = db_query("SELECT field_places_id_value AS places_id  FROM {field_data_field_places_id}")->fetchCol();
 
-    //dpm($record);
+  foreach ($gresults['results'] as $value) { 
+
+    if (!in_array($value['id'],$existingnodes)) { // don't add node if already in db
+
     $thisaddress = explode(',', $value['formatted_address']);
-    //dpm($thisaddress);
 
-    // dpm($value['formatted_address']);
-    // dpm($value['geometry']['location']['lat']);
-    // dpm($value['geometry']['location']['lng']);
-
-
-    $shops .= $value['name'] . '<br />';
+    $shops .= $value['name'] . '<br />'; // debugging, remove 
 
     global $user;
 
@@ -182,7 +149,7 @@ if ($gresults['status'] == 'OK') {
     $node->field_geofield['und'][0]['source'] = $source;
     $node->field_places_id['und'][0]['value'] = $value['id'];
     $node->field_unique_id['und'][0]['value'] = $value['reference'];
-    $node->status = 0;
+    $node->status = 1;
     $node->revision = 1;
     $node->log = 'This node was created via focuspopulate module at ' . date('c');
 
@@ -190,7 +157,7 @@ if ($gresults['status'] == 'OK') {
 
     drupal_set_message(t('node ' . $value['name'] . ' created'));
 
-    // get details
+    // get details then update node
     $googlePlaces->setReference($value['reference']);
     $results = $googlePlaces->Details();
 
@@ -198,8 +165,6 @@ if ($gresults['status'] == 'OK') {
     $query = "SELECT entity_id AS nid FROM {field_data_field_unique_id} WHERE field_unique_id_value = '" . $value['reference'] . "'";
     
     $result = db_query($query)->fetchField();
-
-    //dpm($result,'result from select query');
       
     $query = new EntityFieldQuery();
 
@@ -237,10 +202,59 @@ if ($gresults['status'] == 'OK') {
       drupal_set_message(t('node ' . $value['name'] . ' update failed'));
     }
 
-  
-  //} // $record->field_factual_id_value
+  }
 
- } // $shopresults
+  else { // add tid for existing nodes
+
+    // entity_id (nid) from new node
+    $query = "SELECT entity_id AS nid  FROM {field_data_field_places_id} WHERE field_places_id_value = '" . $value['id'] . "'";
+    
+    $result = db_query($query)->fetchField();
+
+    dpm($result,'nid for sport update');
+      
+    $query = new EntityFieldQuery();
+
+    $query
+      ->entityCondition('entity_type', 'node')
+      ->entityCondition('bundle', 'gozullalocation')
+      ->propertyCondition('nid', $result)
+      ->range(0, 1);
+       
+    $result = $query->execute();
+
+    $nid = array_keys($result['node']); // sets the nid to the current value in loop
+        
+    $nid = $nid[0]; // Drupal needs this to be a string
+
+    $node = node_load($nid); // load the node
+
+    // dpm($node,'node object');
+    
+    node_object_prepare($node);
+
+    // set tne new values
+    $node->type = 'gozullalocation';
+    $node->field_sport_type['und'][0]['tid'] = $tid;
+
+    $node->revision = 1;
+    $node->log = 'Sport updated via focuspopulate module at ' . date('c');
+
+    if ($node = node_submit($node)) {
+      node_save($node);
+       drupal_set_message(t('sport tid for ' . $value['name'] . ' updated'));
+    }
+    else {
+      drupal_set_message(t('sport tid for ' . $value['name'] . ' update failed'));
+    }
+
+
+  }
+
+  // dpm($existingnodes,'existing nodes');
+  //} // $foreach
+
+ } // $gresults['status']
 
 
 
