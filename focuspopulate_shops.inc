@@ -211,7 +211,7 @@ if ($gresults['status'] == 'OK') {
     
     $result = db_query($query)->fetchField();
 
-    dpm($result,'nid for sport update');
+    //dpm($result,'nid for sport update');
       
     $query = new EntityFieldQuery();
 
@@ -230,22 +230,25 @@ if ($gresults['status'] == 'OK') {
     $node = node_load($nid); // load the node
 
     // dpm($node,'node object');
-    
+
     node_object_prepare($node);
 
     // set tne new values
     $node->type = 'gozullalocation';
-    $node->field_sport_type['und'][0]['tid'] = $tid;
+
+    $node->field_sport_type['und'][] = array('tid' => $tid);
 
     $node->revision = 1;
     $node->log = 'Sport updated via focuspopulate module at ' . date('c');
 
+    $thisshop = $value['name'];
+
     if ($node = node_submit($node)) {
       node_save($node);
-       drupal_set_message(t('sport tid for ' . $value['name'] . ' updated'));
+       drupal_set_message(t('Sport: ' . $sport . ' added to ' . $thisshop));
     }
     else {
-      drupal_set_message(t('sport tid for ' . $value['name'] . ' update failed'));
+      drupal_set_message(t('Sport: ' . $sport . ' was not added to ' . $thisshop));
     }
 
 
