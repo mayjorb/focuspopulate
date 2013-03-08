@@ -69,36 +69,66 @@ switch ($sport) {
 
   case 'bike':
     $tid = 14; // term ID from focus_sport taxonomy
+    //start building search
+    $googlePlaces->setQuery('bicycle,bike shop,bike');
+    $googlePlaces->setTypes('store'); //$circle_radius = focuspopulate_miles_to_meters($radius);
+    $googlePlaces->setRadius($radius);
+
+    $gresults = $googlePlaces->textSearch();
     
     break;
 
   case 'boat':
-  $tid = 15; // term ID from focus_sport taxonomy
+    $tid = 15; // term ID from focus_sport taxonomy
     //start building search
-    
+    $googlePlaces->setQuery('canoe,kayak,boat,paddle');
+    $googlePlaces->setTypes('store'); //$circle_radius = focuspopulate_miles_to_meters($radius);
+    $googlePlaces->setRadius($radius);
+
+    $gresults = $googlePlaces->textSearch();
     break;  
 
   case 'climb':
     $tid = 13; // term ID from focus_sport taxonomy
     //start building search
+    $googlePlaces->setQuery('climbing,mountain climbing,climbing wall');
+    $googlePlaces->setTypes('store'); //$circle_radius = focuspopulate_miles_to_meters($radius);
+    $googlePlaces->setRadius($radius);
+
+    $gresults = $googlePlaces->textSearch();
     
     break;
   
   case 'golf':
     $tid = 20; // term ID from focus_sport taxonomy
     //start building search
+    $googlePlaces->setQuery('golf shop');
+    $googlePlaces->setTypes('store'); //$circle_radius = focuspopulate_miles_to_meters($radius);
+    $googlePlaces->setRadius($radius);
+
+    $gresults = $googlePlaces->textSearch();
     
     break; 
 
   case 'skate':
     $tid = 18; // term ID from focus_sport taxonomy
     //start building search
+    $googlePlaces->setQuery('skateboard,skate shop');
+    $googlePlaces->setTypes('store'); //$circle_radius = focuspopulate_miles_to_meters($radius);
+    $googlePlaces->setRadius($radius);
+
+    $gresults = $googlePlaces->textSearch();
     
     break;
 
   case 'snow':
     $tid = 19; // term ID from focus_sport taxonomy
     //start building search
+    $googlePlaces->setQuery('snowboard,ski');
+    $googlePlaces->setTypes('store'); //$circle_radius = focuspopulate_miles_to_meters($radius);
+    $googlePlaces->setRadius($radius);
+
+    $gresults = $googlePlaces->textSearch();
     
     break; 
   
@@ -125,8 +155,6 @@ if ($gresults['status'] == 'OK') {
     if (!in_array($value['id'],$existingnodes)) { // don't add node if already in db
 
     $thisaddress = explode(',', $value['formatted_address']);
-
-    $shops .= $value['name'] . '<br />'; // debugging, remove 
 
     global $user;
 
@@ -155,7 +183,8 @@ if ($gresults['status'] == 'OK') {
 
     node_save($node);
 
-    drupal_set_message(t('node ' . $value['name'] . ' created'));
+    // drupal_set_message(t('node ' . $value['name'] . ' created'));
+    $shops .='<div>' . $value['name'] . ' at ' . $thisaddress[0] . ' ' . $thisaddress[1] . ', ' . $thisaddress[2] . ' created</div>'; // display newly created shops
 
     // get details then update node
     $googlePlaces->setReference($value['reference']);
@@ -196,7 +225,7 @@ if ($gresults['status'] == 'OK') {
 
     if ($node = node_submit($node)) {
       node_save($node);
-       drupal_set_message(t('node ' . $value['name'] . ' updated'));
+       // drupal_set_message(t('node ' . $value['name'] . ' updated'));
     }
     else {
       drupal_set_message(t('node ' . $value['name'] . ' update failed'));
@@ -245,11 +274,12 @@ if ($gresults['status'] == 'OK') {
 
     if ($node = node_submit($node)) {
       node_save($node);
-       drupal_set_message(t('Sport: ' . $sport . ' added to ' . $thisshop));
+      $shops .='<div>' . $sport . ' category added/updated to ' . $thisshop . '</div>'; // display newly created shops
+       //drupal_set_message(t('Sport: ' . $sport . ' added to ' . $thisshop));
     }
-    else {
-      drupal_set_message(t('Sport: ' . $sport . ' was not added to ' . $thisshop));
-    }
+    // else {
+    //   drupal_set_message(t('Sport: ' . $sport . ' was not added to ' . $thisshop));
+    // }
 
 
   }
