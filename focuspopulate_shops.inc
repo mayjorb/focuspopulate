@@ -7,7 +7,6 @@
  * builds factual shop directories
 */
 
-//try {
 
 // factual driver files
 require_once('factual-php-driver/Factual.php');
@@ -36,18 +35,34 @@ function focuspopulate_meters_to_miles($meters) {
   return $miles;
 }
 
-if (isset($_GET['circle']['location']) && $_GET['circle']['location']) {
-  $thislocation = $_GET['circle']['location'];
-  $geolookup = $factual->geocode($thislocation);
+if (isset($_SESSION['ip_geoloc']['location']['latitude']) && isset($_SESSION['ip_geoloc']['location']['longitude'])) {
+  $user_lat = $_SESSION['ip_geoloc']['location']['latitude'];
+  $user_lon = $_SESSION['ip_geoloc']['location']['longitude'];
 }
 else {
-  $geolookup = $factual->geocode("Bend, OR");
+  $user_lat = '44.6367836'; // newport, oregon
+  $user_lon = '-124.0534505';
 }
-   
-$latitude   = $geolookup['latitude']; 
-$longitude = $geolookup['longitude'];
 
-$googlePlaces->setLocation($latitude . ',' . $longitude);
+
+if (isset($_GET['circle']['location']) && $_GET['circle']['location']) {
+
+  // geocode (convert an address to longitude and latitude) if submitted in form
+  $location = $_GET['circle']['location'];
+  
+  $geolookup = $factual->geocode($location);
+
+  //geocode (convert an address to longitude and latitude)
+  //$geolookup = $factual->geocode("425 Sherman Ave, Palo Alto, CA, USA");
+  //print_r($geolookup);
+
+  // if latitude and longitude are found use these values
+  if (isset($geolookup['latitude']) && $geolookup['latitude'] && isset($geolookup['longitude']) && $geolookup['longitude']) {
+    $user_lat = $geolookup['latitude'];
+    $user_lon = $geolookup['longitude'];
+  }
+  
+}
 
 // set circle radius
 if (isset($_GET['circle']['value']) && is_numeric($_GET['circle']['value'])) {
@@ -56,12 +71,8 @@ if (isset($_GET['circle']['value']) && is_numeric($_GET['circle']['value'])) {
 else {
   $radius =  50;
 }
-// $radius =  50;
-//$circle_radius = focuspopulate_miles_to_meters($radius);
 
-$limit = 5;
-$offset = 0;
-
+$googlePlaces->setLocation($user_lat . ',' . $user_lon);
 
 $shops = '';
 
@@ -70,7 +81,7 @@ switch ($sport) {
   case 'bike':
     $tid = 14; // term ID from focus_sport taxonomy
     //start building search
-    $googlePlaces->setQuery('bicycle,bike shop,bike');
+    $googlePlaces->setQuery('bicycle,bike shop');
     $googlePlaces->setTypes('store'); //$circle_radius = focuspopulate_miles_to_meters($radius);
     $googlePlaces->setRadius($radius);
 
@@ -91,7 +102,7 @@ switch ($sport) {
   case 'climb':
     $tid = 13; // term ID from focus_sport taxonomy
     //start building search
-    $googlePlaces->setQuery('climbing,mountain climbing,climbing wall');
+    $googlePlaces->setQuery('climbing,climbing gym');
     $googlePlaces->setTypes('store'); //$circle_radius = focuspopulate_miles_to_meters($radius);
     $googlePlaces->setRadius($radius);
 
@@ -144,8 +155,11 @@ switch ($sport) {
 
     break;
 }
+dpm($gresults['status'],'Status of googlePlaces search');
 
 if ($gresults['status'] == 'OK') {
+
+  $update = FALSE;
 
   // Get an associative array of places_id's.
   $existingnodes = db_query("SELECT field_places_id_value AS places_id  FROM {field_data_field_places_id}")->fetchCol();
@@ -154,148 +168,186 @@ if ($gresults['status'] == 'OK') {
 
     if (!in_array($value['id'],$existingnodes)) { // don't add node if already in db
 
-    $thisaddress = explode(',', $value['formatted_address']);
+      $thisaddress = explode(',', $value['formatted_address']);
 
-    global $user;
+      global $user;
 
-    $node = new stdClass(); // create new node object
-    $node->type = 'gozullalocation';
-    $node->language = LANGUAGE_NONE;
-    $node->uid = $user->uid; 
-    node_object_prepare($node);
-    $node->title = $value['name'];
-    $node->field_address['und'][0]['thoroughfare'] = $thisaddress[0]; // street
-    $node->field_address['und'][0]['locality'] = $thisaddress[1]; // city
-    $node->field_address['und'][0]['administrative_area'] = $thisaddress[2]; // state
-    //$node->field_address['und'][0]['postal_code'] = $thisaddress[3]; // zipcode
-    $node->field_address['und'][0]['country'] = 'US';
-    $node->field_geofield['und'][0]['lat'] = $value['geometry']['location']['lat'];
-    $node->field_geofield['und'][0]['lon'] = $value['geometry']['location']['lng'];
-    //$node->field_phone['und'][0]['value'] = $value['tel'];
-    //$node->field_website['und'][0]['url'] = $value['website'];
-    $node->field_sport_type['und'][0]['tid'] = $tid;
-    $node->field_geofield['und'][0]['source'] = $source;
-    $node->field_places_id['und'][0]['value'] = $value['id'];
-    $node->field_unique_id['und'][0]['value'] = $value['reference'];
-    $node->status = 1;
-    $node->revision = 1;
-    $node->log = 'This node was created via focuspopulate module at ' . date('c');
+      $node = new stdClass(); // create new node object
+      $node->type = 'gozullalocation';
+      $node->language = LANGUAGE_NONE;
+      $node->uid = $user->uid; 
 
-    node_save($node);
+      node_object_prepare($node);
+      $node->title = $value['name'];
+      $node->field_address['und'][0]['thoroughfare'] = $thisaddress[0]; // street
+      $node->field_address['und'][0]['locality'] = $thisaddress[1]; // city
+      $node->field_address['und'][0]['administrative_area'] = $thisaddress[2]; // state
+      //$node->field_address['und'][0]['postal_code'] = $thisaddress[3]; // zipcode
+      $node->field_address['und'][0]['country'] = 'US';
+      $node->field_geofield['und'][0]['lat'] = $value['geometry']['location']['lat'];
+      $node->field_geofield['und'][0]['lon'] = $value['geometry']['location']['lng'];
+      //$node->field_phone['und'][0]['value'] = $value['tel'];
+      //$node->field_website['und'][0]['url'] = $value['website'];
+      $node->field_sport_type['und'][0]['tid'] = $tid;
+      $node->field_geofield['und'][0]['source'] = $source;
+      $node->field_places_id['und'][0]['value'] = $value['id'];
+      $node->field_unique_id['und'][0]['value'] = $value['reference'];
+      $node->status = 1;
+      $node->revision = 1;
+      $node->log = 'This node was created via focuspopulate module at ' . date('c');
 
-    // drupal_set_message(t('node ' . $value['name'] . ' created'));
-    $shops .='<div>' . $value['name'] . ' at ' . $thisaddress[0] . ' ' . $thisaddress[1] . ', ' . $thisaddress[2] . ' created</div>'; // display newly created shops
-
-    // get details then update node
-    $googlePlaces->setReference($value['reference']);
-    $results = $googlePlaces->Details();
-
-    // entity_id (nid) from new node
-    $query = "SELECT entity_id AS nid FROM {field_data_field_unique_id} WHERE field_unique_id_value = '" . $value['reference'] . "'";
-    
-    $result = db_query($query)->fetchField();
-      
-    $query = new EntityFieldQuery();
-
-    $query
-      ->entityCondition('entity_type', 'node')
-      ->entityCondition('bundle', 'gozullalocation')
-      ->propertyCondition('nid', $result)
-      ->range(0, 1);
-       
-    $result = $query->execute();
-
-    $nid = array_keys($result['node']); // sets the nid to the current value in loop
-        
-    $nid = $nid[0]; // Drupal needs this to be a string
-
-    $node = node_load($nid); // load the node
-
-    node_object_prepare($node);
-
-    // set tne new values
-    $node->type = 'gozullalocation';
-    $node->field_phone['und'][0]['value'] = $results['result']['formatted_phone_number'];
-    $node->field_website['und'][0]['url'] = $results['result']['website'];
-    $node->field_address['und'][0]['administrative_area'] = $results['result']['address_fixed']['address_state']; // state
-    $node->field_address['und'][0]['postal_code'] = $results['result']['address_fixed']['address_postal_code']; // zipcode
-
-    $node->revision = 1;
-    $node->log = 'This node was updated via focuspopulate module at ' . date('c');
-
-    if ($node = node_submit($node)) {
       node_save($node);
-       // drupal_set_message(t('node ' . $value['name'] . ' updated'));
-    }
-    else {
-      drupal_set_message(t('node ' . $value['name'] . ' update failed'));
-    }
 
-  }
+      drupal_set_message(t($value['name'] . ' at ' . $thisaddress[0] . ' ' . $thisaddress[1] . ', ' . $thisaddress[2] . ' created'));
 
-  else { // add tid for existing nodes
+      // get details then update node
+      $googlePlaces->setReference($value['reference']);
+      $results = $googlePlaces->Details();
 
-    // entity_id (nid) from new node
-    // $query = "SELECT entity_id AS nid  FROM {field_data_field_places_id} WHERE field_places_id_value = '" . $value['id'] . "'";
+      // entity_id (nid) from new node
+      $query = "SELECT entity_id AS nid FROM {field_data_field_unique_id} WHERE field_unique_id_value = '" . $value['reference'] . "'";
     
-    // $result = db_query($query)->fetchField();
-
-    // //dpm($result,'nid for sport update');
+      $result = db_query($query)->fetchField();
       
-    // $query = new EntityFieldQuery();
+      $query = new EntityFieldQuery();
 
-    // $query
-    //   ->entityCondition('entity_type', 'node')
-    //   ->entityCondition('bundle', 'gozullalocation')
-    //   ->propertyCondition('nid', $result)
-    //   ->range(0, 1);
+      $query
+       ->entityCondition('entity_type', 'node')
+       ->entityCondition('bundle', 'gozullalocation')
+       ->propertyCondition('nid', $result)
+       ->range(0, 1);
        
-    // $result = $query->execute();
+      $result = $query->execute();
 
-    // $nid = array_keys($result['node']); // sets the nid to the current value in loop
+      $nid = array_keys($result['node']); // sets the nid to the current value in loop
         
-    // $nid = $nid[0]; // Drupal needs this to be a string
+      $nid = $nid[0]; // Drupal needs this to be a string
 
-    // $node = node_load($nid); // load the node
+      $node = node_load($nid); // load the node
 
-    // // dpm($node,'node object');
+      node_object_prepare($node);
 
-    // node_object_prepare($node);
+      // set tne new values
+      $node->type = 'gozullalocation';
+      $node->field_phone['und'][0]['value'] = $results['result']['formatted_phone_number'];
+      $node->field_website['und'][0]['url'] = $results['result']['website'];
+      $node->field_address['und'][0]['administrative_area'] = $results['result']['address_fixed']['address_state']; // state
+      $node->field_address['und'][0]['postal_code'] = $results['result']['address_fixed']['address_postal_code']; // zipcode
 
-    // // set tne new values
-    // $node->type = 'gozullalocation';
+      $node->revision = 1;
+      $node->log = 'This node was updated via focuspopulate module at ' . date('c');
 
-    // $node->field_sport_type['und'][] = array('tid' => $tid);
+      if ($node = node_submit($node)) {
+        node_save($node);
+        $update = TRUE;
+      }
+      else {
+        drupal_set_message(t('node ' . $value['name'] . ' update failed'));
+      }
 
-    // $node->revision = 1;
-    // $node->log = 'Sport updated via focuspopulate module at ' . date('c');
+    }
 
-    // $thisshop = $value['name'];
+    else { // add tid for existing nodes
 
-    // if ($node = node_submit($node)) {
-    //   node_save($node);
-    //   $shops .='<div>' . $sport . ' category added/updated to ' . $thisshop . '</div>'; // display newly created shops
-    //    //drupal_set_message(t('Sport: ' . $sport . ' added to ' . $thisshop));
-    // }
-    // else {
-    //   drupal_set_message(t('Sport: ' . $sport . ' was not added to ' . $thisshop));
-    // }
+      // entity_id (nid) from new node
+      $query = "SELECT entity_id AS nid  FROM {field_data_field_places_id} WHERE field_places_id_value = '" . $value['id'] . "'";
+    
+      $result = db_query($query)->fetchField();
+
+      $query = new EntityFieldQuery();
+
+      $query
+        ->entityCondition('entity_type', 'node')
+        ->entityCondition('bundle', 'gozullalocation')
+        ->propertyCondition('nid', $result)
+        ->range(0, 1);
+       
+      $result = $query->execute();
+
+      $nid = array_keys($result['node']); // sets the nid to the current value in loop
+        
+      $nid = $nid[0]; // Drupal needs this to be a string
+
+      $node = node_load($nid); // load the node
+
+      $thisshop = $value['name'];
+      $num = 0;
+      // dpm($node->field_sport_type['und'][] = array('tid' => $tid), 'does this return tids');
+      $existingtids = $node->field_sport_type['und'][] = array('tid' => $tid);
+      //dpm($tid, 'tid value');
+
+      //dpm($existingtids, 'existingtids');
+      if (!in_array($tid,$existingtids)) { // don't add sport if already in db
+      
+        node_object_prepare($node);
+
+        // set tne new values
+        $node->type = 'gozullalocation';
+        $node->field_sport_type['und'][] = array('tid' => $tid);
+        $node->revision = 1;
+        $node->log = 'Sport updated via focuspopulate module at ' . date('c');
+
+        if ($node = node_submit($node)) {
+          //node_save($node);
+          drupal_set_message(t($sport . ' category added to ' . $thisshop), 'warning');
+        }
+
+      }
+
+      //if ($tid == $tidarray) {
+        
+//foreach ($node->field_sport_type as $und) {
+
+      //   foreach ($und as $value) {
+      //     $addsport = FALSE;
+      //     foreach ($value as $thistid) {
+
+      //       if ($thistid != $tid) {
+      //         $addsport = TRUE;
+      //       } // $tid != $thistid
+      //       else {
+      //         $addsport = FALSE;
+      //       }
+      //     } //foreach ($value as $thistid)
+      //     if ($addsport) {
+      //       node_object_prepare($node);
+
+      //       // set tne new values
+      //       $node->type = 'gozullalocation';
+      //       $node->field_sport_type['und'][] = array('tid' => $tid);
+      //       $node->revision = 1;
+      //       $node->log = 'Sport updated via focuspopulate module at ' . date('c');
+
+      //       if ($node = node_submit($node)) {
+      //         //node_save($node);
+      //         drupal_set_message(t($sport . ' category added to ' . $thisshop), 'warning');
+      //       }
+      //     } // if ($addsport)
+      //   }
+      
+      // } // foreach ($und as $value)
+
+    } // foreach ($node->field_sport_type as $und)
 
 
+      //}
+      // else {
+      //   dpm($existingtids, 'tid NOT in array');
+      // }
+
+      
+ 
+  } // $gresults['status']
+
+  if (!$update) {
+    drupal_set_message(t('No shops were added'), 'warning');
   }
-
-  // dpm($existingnodes,'existing nodes');
-  //} // $foreach
-
- } // $gresults['status']
-
-
 
 }
-else {
-  print 'status = ' . $gresults['status'];
 
-  $sport = '';
-  $shops .= '<div class="places-row last"><h3 class="places-shop">no ' . $sport . ' shops found</h3><div class="places-detail">Try increasing the miles and/or changing the location.</div></div>';
+else {
+
+  drupal_set_message(t('googlePlaces status',$gresults['status']), 'warning');
+
 }
 
