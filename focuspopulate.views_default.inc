@@ -35,12 +35,15 @@ function focuspopulate_views_default_views() {
   $handler->display->display_options['query']['options']['query_comment'] = FALSE;
   $handler->display->display_options['exposed_form']['type'] = 'basic';
   $handler->display->display_options['exposed_form']['options']['reset_button_label'] = 'Find Me';
-  $handler->display->display_options['pager']['type'] = 'full';
-  $handler->display->display_options['pager']['options']['items_per_page'] = '10';
+  $handler->display->display_options['pager']['type'] = 'none';
   $handler->display->display_options['pager']['options']['offset'] = '0';
-  $handler->display->display_options['pager']['options']['id'] = '0';
   $handler->display->display_options['style_plugin'] = 'default';
   $handler->display->display_options['row_plugin'] = 'fields';
+  /* Relationship: Content: gozulla location (field_gozulla_location) */
+  $handler->display->display_options['relationships']['field_gozulla_location_nid']['id'] = 'field_gozulla_location_nid';
+  $handler->display->display_options['relationships']['field_gozulla_location_nid']['table'] = 'field_data_field_gozulla_location';
+  $handler->display->display_options['relationships']['field_gozulla_location_nid']['field'] = 'field_gozulla_location_nid';
+  $handler->display->display_options['relationships']['field_gozulla_location_nid']['delta'] = '-1';
   /* Field: location nid */
   $handler->display->display_options['fields']['nid_1']['id'] = 'nid_1';
   $handler->display->display_options['fields']['nid_1']['table'] = 'node';
@@ -60,6 +63,13 @@ function focuspopulate_views_default_views() {
   $handler->display->display_options['fields']['field_sport_type']['element_label_colon'] = FALSE;
   $handler->display->display_options['fields']['field_sport_type']['type'] = 'taxonomy_term_reference_plain';
   $handler->display->display_options['fields']['field_sport_type']['delta_offset'] = '0';
+  /* Field: Content: Edit link */
+  $handler->display->display_options['fields']['edit_node']['id'] = 'edit_node';
+  $handler->display->display_options['fields']['edit_node']['table'] = 'views_entity_node';
+  $handler->display->display_options['fields']['edit_node']['field'] = 'edit_node';
+  $handler->display->display_options['fields']['edit_node']['label'] = '';
+  $handler->display->display_options['fields']['edit_node']['element_label_colon'] = FALSE;
+  $handler->display->display_options['fields']['edit_node']['text'] = '[ edit ]';
   /* Field: Content: Title */
   $handler->display->display_options['fields']['title']['id'] = 'title';
   $handler->display->display_options['fields']['title']['table'] = 'node';
@@ -73,6 +83,7 @@ function focuspopulate_views_default_views() {
   $handler->display->display_options['fields']['nid']['id'] = 'nid';
   $handler->display->display_options['fields']['nid']['table'] = 'node';
   $handler->display->display_options['fields']['nid']['field'] = 'nid';
+  $handler->display->display_options['fields']['nid']['relationship'] = 'field_gozulla_location_nid';
   $handler->display->display_options['fields']['nid']['ui_name'] = 'deal link';
   $handler->display->display_options['fields']['nid']['label'] = '';
   $handler->display->display_options['fields']['nid']['alter']['alter_text'] = TRUE;
@@ -82,7 +93,7 @@ function focuspopulate_views_default_views() {
   $handler->display->display_options['fields']['nid']['element_type'] = 'div';
   $handler->display->display_options['fields']['nid']['element_class'] = 'deal-link';
   $handler->display->display_options['fields']['nid']['element_label_colon'] = FALSE;
-  $handler->display->display_options['fields']['nid']['hide_alter_empty'] = FALSE;
+  $handler->display->display_options['fields']['nid']['hide_empty'] = TRUE;
   $handler->display->display_options['fields']['nid']['node_in_colorbox_width'] = '600';
   $handler->display->display_options['fields']['nid']['node_in_colorbox_height'] = '600';
   /* Field: Field: Address */
@@ -108,14 +119,6 @@ function focuspopulate_views_default_views() {
   $handler->display->display_options['fields']['distance']['set_precision'] = 1;
   $handler->display->display_options['fields']['distance']['precision'] = '1';
   $handler->display->display_options['fields']['distance']['location_provider'] = 'circle';
-  /* Field: Content: Edit link */
-  $handler->display->display_options['fields']['edit_node']['id'] = 'edit_node';
-  $handler->display->display_options['fields']['edit_node']['table'] = 'views_entity_node';
-  $handler->display->display_options['fields']['edit_node']['field'] = 'edit_node';
-  $handler->display->display_options['fields']['edit_node']['label'] = '';
-  $handler->display->display_options['fields']['edit_node']['exclude'] = TRUE;
-  $handler->display->display_options['fields']['edit_node']['element_label_colon'] = FALSE;
-  $handler->display->display_options['fields']['edit_node']['text'] = '[ edit ]';
   /* Sort criterion: Proximity: Distance */
   $handler->display->display_options['sorts']['distance']['id'] = 'distance';
   $handler->display->display_options['sorts']['distance']['table'] = 'openlayers_proximity';
@@ -217,7 +220,7 @@ function focuspopulate_views_default_views() {
   $handler->display->display_options['menu']['title'] = 'surf';
   $handler->display->display_options['menu']['description'] = 'find surf shops near you';
   $handler->display->display_options['menu']['weight'] = '0';
-  $handler->display->display_options['menu']['name'] = 'menu-populate';
+  $handler->display->display_options['menu']['name'] = 'menu-populate-menu';
   $handler->display->display_options['menu']['context'] = 0;
 
   /* Display: skate */
@@ -272,7 +275,7 @@ function focuspopulate_views_default_views() {
   $handler->display->display_options['menu']['title'] = 'skate';
   $handler->display->display_options['menu']['description'] = 'find skate shops near you';
   $handler->display->display_options['menu']['weight'] = '0';
-  $handler->display->display_options['menu']['name'] = 'menu-populate';
+  $handler->display->display_options['menu']['name'] = 'menu-populate-menu';
   $handler->display->display_options['menu']['context'] = 0;
 
   /* Display: snow */
@@ -327,7 +330,7 @@ function focuspopulate_views_default_views() {
   $handler->display->display_options['menu']['title'] = 'snow';
   $handler->display->display_options['menu']['description'] = 'find snow shops near you';
   $handler->display->display_options['menu']['weight'] = '0';
-  $handler->display->display_options['menu']['name'] = 'menu-populate';
+  $handler->display->display_options['menu']['name'] = 'menu-populate-menu';
   $handler->display->display_options['menu']['context'] = 0;
 
   /* Display: bike */
@@ -382,7 +385,7 @@ function focuspopulate_views_default_views() {
   $handler->display->display_options['menu']['title'] = 'bike';
   $handler->display->display_options['menu']['description'] = 'find bike shops near you';
   $handler->display->display_options['menu']['weight'] = '0';
-  $handler->display->display_options['menu']['name'] = 'menu-populate';
+  $handler->display->display_options['menu']['name'] = 'menu-populate-menu';
   $handler->display->display_options['menu']['context'] = 0;
 
   /* Display: climb */
@@ -437,7 +440,7 @@ function focuspopulate_views_default_views() {
   $handler->display->display_options['menu']['title'] = 'climb';
   $handler->display->display_options['menu']['description'] = 'find climb shops near you';
   $handler->display->display_options['menu']['weight'] = '0';
-  $handler->display->display_options['menu']['name'] = 'menu-populate';
+  $handler->display->display_options['menu']['name'] = 'menu-populate-menu';
   $handler->display->display_options['menu']['context'] = 0;
 
   /* Display: boat */
@@ -492,7 +495,7 @@ function focuspopulate_views_default_views() {
   $handler->display->display_options['menu']['title'] = 'boat';
   $handler->display->display_options['menu']['description'] = 'find boat shops near you';
   $handler->display->display_options['menu']['weight'] = '0';
-  $handler->display->display_options['menu']['name'] = 'menu-populate';
+  $handler->display->display_options['menu']['name'] = 'menu-populate-menu';
   $handler->display->display_options['menu']['context'] = 0;
 
   /* Display: golf */
@@ -547,7 +550,7 @@ function focuspopulate_views_default_views() {
   $handler->display->display_options['menu']['title'] = 'golf';
   $handler->display->display_options['menu']['description'] = 'find golf shops near you';
   $handler->display->display_options['menu']['weight'] = '0';
-  $handler->display->display_options['menu']['name'] = 'menu-populate';
+  $handler->display->display_options['menu']['name'] = 'menu-populate-menu';
   $handler->display->display_options['menu']['context'] = 0;
   $translatables['populatedatabase'] = array(
     t('Master'),
@@ -558,17 +561,11 @@ function focuspopulate_views_default_views() {
     t('Sort by'),
     t('Asc'),
     t('Desc'),
-    t('Items per page'),
-    t('- All -'),
-    t('Offset'),
-    t('« first'),
-    t('‹ previous'),
-    t('next ›'),
-    t('last »'),
+    t('field_gozulla_location'),
+    t('[ edit ]'),
     t('DEAL$'),
     t('.'),
     t(','),
-    t('[ edit ]'),
     t('All'),
     t('surf'),
     t('populate surf'),
