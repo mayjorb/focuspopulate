@@ -345,9 +345,9 @@ if ($gresults['status'] == 'OK') {
 
 }
 
-else {
+// else {
 
-  drupal_set_message(t('googlePlaces status',$gresults['status']), 'warning');
+//   drupal_set_message(t('googlePlaces status',$gresults['status']), 'warning');
 
-}
+// }
 
