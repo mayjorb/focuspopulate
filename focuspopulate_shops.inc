@@ -35,6 +35,14 @@ function focuspopulate_meters_to_miles($meters) {
   return $miles;
 }
 
+if (isset($_SESSION['ip_geoloc']['location']['locality']) && isset($_SESSION['ip_geoloc']['location']['administrative_area_level_1'])) {
+  $city_state = $_SESSION['ip_geoloc']['location']['locality'] . ', ' . $_SESSION['ip_geoloc']['location']['administrative_area_level_1'];
+}
+else {
+  $city_state = t('Newport, OR');
+}
+
+
 if (isset($_SESSION['ip_geoloc']['location']['latitude']) && isset($_SESSION['ip_geoloc']['location']['longitude'])) {
   $user_lat = $_SESSION['ip_geoloc']['location']['latitude'];
   $user_lon = $_SESSION['ip_geoloc']['location']['longitude'];
@@ -52,10 +60,6 @@ if (isset($_GET['circle']['location']) && $_GET['circle']['location']) {
   
   $geolookup = $factual->geocode($location);
 
-  //geocode (convert an address to longitude and latitude)
-  //$geolookup = $factual->geocode("425 Sherman Ave, Palo Alto, CA, USA");
-  //print_r($geolookup);
-
   // if latitude and longitude are found use these values
   if (isset($geolookup['latitude']) && $geolookup['latitude'] && isset($geolookup['longitude']) && $geolookup['longitude']) {
     $user_lat = $geolookup['latitude'];
@@ -69,12 +73,18 @@ if (isset($_GET['circle']['value']) && is_numeric($_GET['circle']['value'])) {
   $radius = $_GET['circle']['value'];
 }
 else {
-  $radius =  50;
+  $radius =  31;
 }
 
 $googlePlaces->setLocation($user_lat . ',' . $user_lon);
 
 $shops = '';
+
+$radiusmeters = focuspopulate_miles_to_meters($radius);
+
+if ($radiusmeters > 50000) {
+  $radiusmeters = 50000;
+}
 
 switch ($sport) {
 
@@ -83,7 +93,7 @@ switch ($sport) {
     //start building search
     $googlePlaces->setQuery('bicycle,bike shop');
     $googlePlaces->setTypes('store'); //$circle_radius = focuspopulate_miles_to_meters($radius);
-    $googlePlaces->setRadius($radius);
+    $googlePlaces->setRadius($radiusmeters);
 
     $gresults = $googlePlaces->textSearch();
     
@@ -94,7 +104,7 @@ switch ($sport) {
     //start building search
     $googlePlaces->setQuery('canoe,kayak,boat,paddle');
     $googlePlaces->setTypes('store'); //$circle_radius = focuspopulate_miles_to_meters($radius);
-    $googlePlaces->setRadius($radius);
+    $googlePlaces->setRadius($radiusmeters);
 
     $gresults = $googlePlaces->textSearch();
     break;  
@@ -104,7 +114,7 @@ switch ($sport) {
     //start building search
     $googlePlaces->setQuery('climbing,climbing gym');
     $googlePlaces->setTypes('store'); //$circle_radius = focuspopulate_miles_to_meters($radius);
-    $googlePlaces->setRadius($radius);
+    $googlePlaces->setRadius($radiusmeters);
 
     $gresults = $googlePlaces->textSearch();
     
@@ -115,7 +125,7 @@ switch ($sport) {
     //start building search
     $googlePlaces->setQuery('golf shop');
     $googlePlaces->setTypes('store'); //$circle_radius = focuspopulate_miles_to_meters($radius);
-    $googlePlaces->setRadius($radius);
+    $googlePlaces->setRadius($radiusmeters);
 
     $gresults = $googlePlaces->textSearch();
     
@@ -126,7 +136,7 @@ switch ($sport) {
     //start building search
     $googlePlaces->setQuery('skateboard,skate shop');
     $googlePlaces->setTypes('store'); //$circle_radius = focuspopulate_miles_to_meters($radius);
-    $googlePlaces->setRadius($radius);
+    $googlePlaces->setRadius($radiusmeters);
 
     $gresults = $googlePlaces->textSearch();
     
@@ -137,7 +147,7 @@ switch ($sport) {
     //start building search
     $googlePlaces->setQuery('snowboard,ski');
     $googlePlaces->setTypes('store'); //$circle_radius = focuspopulate_miles_to_meters($radius);
-    $googlePlaces->setRadius($radius);
+    $googlePlaces->setRadius($radiusmeters);
 
     $gresults = $googlePlaces->textSearch();
     
@@ -149,7 +159,7 @@ switch ($sport) {
     //start building search
     $googlePlaces->setQuery('surfshop, surfboards');
     $googlePlaces->setTypes('store'); //$circle_radius = focuspopulate_miles_to_meters($radius);
-    $googlePlaces->setRadius($radius);
+    $googlePlaces->setRadius($radiusmeters);
 
     $gresults = $googlePlaces->textSearch();
 
@@ -158,8 +168,6 @@ switch ($sport) {
 dpm($gresults['status'],'Status of googlePlaces search');
 
 if ($gresults['status'] == 'OK') {
-
-  $update = FALSE;
 
   // Get an associative array of places_id's.
   $existingnodes = db_query("SELECT field_places_id_value AS places_id  FROM {field_data_field_places_id}")->fetchCol();
@@ -271,7 +279,7 @@ if ($gresults['status'] == 'OK') {
       $node = node_load($nid); // load the node
 
       $thisshop = $value['name'];
-      $num = 0;
+
       // dpm($node->field_sport_type['und'][] = array('tid' => $tid), 'does this return tids');
       $existingtids = $node->field_sport_type['und'][] = array('tid' => $tid);
       //dpm($tid, 'tid value');
@@ -294,48 +302,7 @@ if ($gresults['status'] == 'OK') {
 
       }
 
-      //if ($tid == $tidarray) {
-        
-//foreach ($node->field_sport_type as $und) {
-
-      //   foreach ($und as $value) {
-      //     $addsport = FALSE;
-      //     foreach ($value as $thistid) {
-
-      //       if ($thistid != $tid) {
-      //         $addsport = TRUE;
-      //       } // $tid != $thistid
-      //       else {
-      //         $addsport = FALSE;
-      //       }
-      //     } //foreach ($value as $thistid)
-      //     if ($addsport) {
-      //       node_object_prepare($node);
-
-      //       // set tne new values
-      //       $node->type = 'gozullalocation';
-      //       $node->field_sport_type['und'][] = array('tid' => $tid);
-      //       $node->revision = 1;
-      //       $node->log = 'Sport updated via focuspopulate module at ' . date('c');
-
-      //       if ($node = node_submit($node)) {
-      //         //node_save($node);
-      //         drupal_set_message(t($sport . ' category added to ' . $thisshop), 'warning');
-      //       }
-      //     } // if ($addsport)
-      //   }
-      
-      // } // foreach ($und as $value)
-
-    } // foreach ($node->field_sport_type as $und)
-
-
-      //}
-      // else {
-      //   dpm($existingtids, 'tid NOT in array');
-      // }
-
-      
+    } 
  
   } // $gresults['status']
 
