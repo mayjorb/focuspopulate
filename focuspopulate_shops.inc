@@ -35,12 +35,28 @@ function focuspopulate_meters_to_miles($meters) {
   return $miles;
 }
 
+// if (isset($_SESSION['ip_geoloc']['location']['locality']) && isset($_SESSION['ip_geoloc']['location']['administrative_area_level_1'])) {
+//   $city_state = $_SESSION['ip_geoloc']['location']['locality'] . ', ' . $_SESSION['ip_geoloc']['location']['administrative_area_level_1'];
+// }
+// else {
+//   $city_state = t('Newport, OR');
+// }
+
 if (isset($_SESSION['ip_geoloc']['location']['locality']) && isset($_SESSION['ip_geoloc']['location']['administrative_area_level_1'])) {
-  $city_state = $_SESSION['ip_geoloc']['location']['locality'] . ', ' . $_SESSION['ip_geoloc']['location']['administrative_area_level_1'];
-}
-else {
-  $city_state = t('Newport, OR');
-}
+    $city_state = $_SESSION['ip_geoloc']['location']['locality'] . ', ' . $_SESSION['ip_geoloc']['location']['administrative_area_level_1'];
+  }
+  else {
+    $city_state = t('Newport, OR');
+  }
+
+  // set circle radius
+  if (isset($_GET['circle']['value']) && is_numeric($_GET['circle']['value']) && $_GET['circle']['value'] <= 31) {
+    $radius = $_GET['circle']['value'];
+  }
+  else {
+    $radius =  31;
+  }
+
 
 
 if (isset($_SESSION['ip_geoloc']['location']['latitude']) && isset($_SESSION['ip_geoloc']['location']['longitude'])) {
@@ -68,8 +84,8 @@ if (isset($_GET['circle']['location']) && $_GET['circle']['location']) {
   
 }
 
-// set circle radius
-if (isset($_GET['circle']['value']) && is_numeric($_GET['circle']['value'])) {
+// // set circle radius
+if (isset($_GET['circle']['value']) && is_numeric($_GET['circle']['value']) && $_GET['circle']['value'] <= 31) {
   $radius = $_GET['circle']['value'];
 }
 else {
@@ -165,10 +181,12 @@ switch ($sport) {
 
     break;
 }
-dpm($gresults['status'],'Status of googlePlaces search');
+  drupal_set_message('Status of googlePlaces search: ' . $gresults['status']);
+//dpm($gresults['status'],'Status of googlePlaces search');
 
 if ($gresults['status'] == 'OK') {
-
+  $total = count($gresults['results']);
+  drupal_set_message($total . ' shops found');
   // Get an associative array of places_id's.
   $existingnodes = db_query("SELECT field_places_id_value AS places_id  FROM {field_data_field_places_id}")->fetchCol();
 
@@ -307,7 +325,7 @@ if ($gresults['status'] == 'OK') {
   } // $gresults['status']
 
   if (!$update) {
-    drupal_set_message(t('No shops were added'), 'warning');
+    drupal_set_message(t('No new shops were added'), 'warning');
   }
 
 }
