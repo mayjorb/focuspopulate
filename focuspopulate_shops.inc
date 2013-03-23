@@ -150,7 +150,7 @@ switch ($sport) {
   case 'skate':
     $tid = 18; // term ID from focus_sport taxonomy
     //start building search
-    $googlePlaces->setQuery('skateboard,skate shop');
+    $googlePlaces->setQuery('skateboard, skate shop');
     $googlePlaces->setTypes('store'); //$circle_radius = focuspopulate_miles_to_meters($radius);
     $googlePlaces->setRadius($radiusmeters);
 
@@ -182,13 +182,17 @@ switch ($sport) {
     break;
 }
   drupal_set_message('Status of googlePlaces search: ' . $gresults['status']);
-//dpm($gresults['status'],'Status of googlePlaces search');
+  //dpm($gresults['results'],'Results of googlePlaces search');
 
 if ($gresults['status'] == 'OK') {
+
   $total = count($gresults['results']);
   drupal_set_message($total . ' shops found');
+
   // Get an associative array of places_id's.
   $existingnodes = db_query("SELECT field_places_id_value AS places_id  FROM {field_data_field_places_id}")->fetchCol();
+  // $focus_total = count($existingnodes);
+  // drupal_set_message($focus_total . ' shops found in Focus Database');
 
   foreach ($gresults['results'] as $value) { 
 
@@ -225,6 +229,7 @@ if ($gresults['status'] == 'OK') {
       node_save($node);
 
       drupal_set_message(t($value['name'] . ' at ' . $thisaddress[0] . ' ' . $thisaddress[1] . ', ' . $thisaddress[2] . ' created'));
+      drupal_set_message(t('Click the "go" button to view newly added shops.'), 'warning', $repeat = FALSE);
 
       // get details then update node
       $googlePlaces->setReference($value['reference']);
@@ -277,58 +282,66 @@ if ($gresults['status'] == 'OK') {
 
       // entity_id (nid) from new node
       $query = "SELECT entity_id AS nid  FROM {field_data_field_places_id} WHERE field_places_id_value = '" . $value['id'] . "'";
-    
-      $result = db_query($query)->fetchField();
 
-      $query = new EntityFieldQuery();
-
-      $query
-        ->entityCondition('entity_type', 'node')
-        ->entityCondition('bundle', 'gozullalocation')
-        ->propertyCondition('nid', $result)
-        ->range(0, 1);
-       
-      $result = $query->execute();
-
-      $nid = array_keys($result['node']); // sets the nid to the current value in loop
+      if (count($query)) { // don't try to update if nothing to update
         
-      $nid = $nid[0]; // Drupal needs this to be a string
+        $update = FALSE;
+        $result = db_query($query)->fetchField();
 
-      $node = node_load($nid); // load the node
+        $query = new EntityFieldQuery();
 
-      $thisshop = $value['name'];
+        $query
+         ->entityCondition('entity_type', 'node')
+         ->entityCondition('bundle', 'gozullalocation')
+         ->propertyCondition('nid', $result)
+         ->range(0, 1);
+       
+        $result = $query->execute();
 
-      // dpm($node->field_sport_type['und'][] = array('tid' => $tid), 'does this return tids');
-      $existingtids = $node->field_sport_type['und'][] = array('tid' => $tid);
-      //dpm($tid, 'tid value');
+        $nid = array_keys($result['node']); // sets the nid to the current value in loop
+        
+        $nid = $nid[0]; // Drupal needs this to be a string
 
-      //dpm($existingtids, 'existingtids');
-      if (!in_array($tid,$existingtids)) { // don't add sport if already in db
+        $node = node_load($nid); // load the node
+
+        $thisshop = $value['name'];
+
+        // dpm($node->field_sport_type['und'][] = array('tid' => $tid), 'does this return tids');
+        $existingtids = $node->field_sport_type['und'][] = array('tid' => $tid);
+        //dpm($tid, 'tid value');
+
+        //dpm($existingtids, 'existingtids');
+        if (!in_array($tid,$existingtids)) { // don't add sport if already in db
       
-        node_object_prepare($node);
+          node_object_prepare($node);
 
-        // set tne new values
-        $node->type = 'gozullalocation';
-        $node->field_sport_type['und'][] = array('tid' => $tid);
-        $node->revision = 1;
-        $node->log = 'Sport updated via focuspopulate module at ' . date('c');
+          // set the new values
+          $node->type = 'gozullalocation';
+          $node->field_sport_type['und'][] = array('tid' => $tid);
+          $node->revision = 1;
+          $node->log = 'Sport updated via focuspopulate module at ' . date('c');
 
-        if ($node = node_submit($node)) {
+          if ($node = node_submit($node)) {
           //node_save($node);
-          drupal_set_message(t($sport . ' category added to ' . $thisshop), 'warning');
-        }
+            drupal_set_message(t($sport . ' category added to ' . $thisshop), 'warning');
+          }
 
-      }
+        }  //!in_array($tid,$existingtids
 
-    } 
+      } //count($query
+    
+    } // foreach
+
  
-  } // $gresults['status']
+  } //else
+
+}// $gresults['status']
 
   if (!$update) {
     drupal_set_message(t('No new shops were added'), 'warning');
   }
 
-}
+
 
 // else {
 
