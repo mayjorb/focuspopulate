@@ -35,9 +35,7 @@ function focuspopulate_views_pre_view(&$view, &$display_id, &$args) {
 
   if ($view->name == 'populatedatabase') {
     //dpm($view, 'view');
-    //dpm($view->display_handler->options, 'view display_handler options filters circle');
 
-    //$view->display['populate_surf']->handler->options['title'] = "New Surf";
     $view->display['populate_bike']->handler->options['filters']['circle']['value']['value'] = $radius;
     $view->display['populate_bike']->handler->options['filters']['circle']['value']['location'] = $city_state;
 
@@ -278,11 +276,11 @@ function focuspopulate_contents($which_block) {
       return array('#markup' => $shops);
       break; 
 
-    case 'vskate':
+    case 'populate_skate':
       $sport = 'skate';
       include_once('focuspopulate_shops.inc'); // common include
       return array('#markup' => $shops);
-      break;
+      break; 
       
     case 'populate_snow':
       $sport = 'snow';
