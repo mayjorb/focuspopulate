@@ -4,8 +4,62 @@
  * Implementation of hook_perm().
  */
 function focuspopulate_perm() {
-  return array('Populate Focus Database');
+  return array('populate focus database');
 }
+
+/**
+* Implements hook_menu().
+*/
+function focuspopulate_menu() {
+  $items = array();
+  $items['admin/content/populate'] = array(
+    'title' => 'Populate Focus Database',
+    'description' => 'Populates Focus DB with google places data.',
+    'page callback' => 'drupal_get_form',
+    'access callback' => TRUE,
+    'page arguments' => array('focuspopulate_admin_settings'),
+    'access arguments' => array('populate focus database'),
+    'type' => MENU_NORMAL_ITEM,
+  );
+
+  return $items;
+}
+
+/**
+* @desc pnw_subarticles configuration
+*/
+function focuspopulate_admin_settings() {
+
+  $form['zipcodes'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Zipcodes'),
+    '#description' => t('Enter one or zipcodes separated by commas.'),
+    '#required' => TRUE,
+  );
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => t('Populate now'),
+  );
+  return $form;
+}
+
+/**
+* @desc pnw_subarticles settings submission
+*/
+function focuspopulate_admin_settings_submit($form, &$form_state) {
+  
+  $zipcodes = $form_state['values']['zipcodes'];
+
+  $zipcode_array = explode(',', $zipcodes);
+
+  //dpm($zipcode_array, '$zipcode_array');
+
+  foreach ($zipcode_array as $thisvalue) {
+    drupal_set_message(t('hey now: ' . $thisvalue));
+  }
+
+}
+
 
 
 // function focuspopulate_form_alter(&$form, &$form_state, $form_id) {
