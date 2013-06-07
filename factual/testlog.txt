@@ -1,0 +1,78 @@
+PHP verison v5+                         Pass
+No classname conflicts                  Pass
+Parse INI File Function                 Pass
+SPL is loaded                           Pass
+curl is loaded                          Pass
+HTML Encoding                           Pass
+Creating Query object                   Pass
+Setting query parameter                 Pass
+API Connection                          Pass
+Limit/Filter/Sort                       Pass
+Unicode Filter                          Pass
+Punctuation                             Pass
+'In' Filter                             Pass
+Multi Filter                            Pass
+Geo Search                              Pass
+Multi Country Search                    Pass
+Response URL                            Pass
+Request Table Name                      Pass
+Response Headers                        Pass
+Response Code                           Pass
+Total Row Count                         Pass
+Submit Test                             Pass	US Sandbox OK
+Reverse Geocoder                        Pass
+Creating Query object                   Pass
+Resolve Endpoint                        Pass
+Crosswalk Endpoint                      Pass
+Schema Endpoint                         Pass
+Diffs Test                              Fail	No access
+Checking Argentina                      Pass
+Checking Australia                      Pass
+Checking Austria                        Pass
+Checking Belgium                        Pass
+Checking Brazil                         Pass
+Checking Canada                         Pass
+Checking Chile                          Pass
+Checking China                          Pass
+Checking Columbia                       Pass
+Checking Croatia (Hrvatska)             Pass
+Checking Czech Republic                 Pass
+Checking Denmark                        Pass
+Checking Egypt                          Pass
+Checking Finland                        Pass
+Checking France                         Pass
+Checking Germany                        Pass
+Checking Greece                         Pass
+Checking Hong Kong                      Pass
+Checking Hungary                        Pass
+Checking India                          Pass
+Checking Indonesia                      Pass
+Checking Ireland                        Pass
+Checking Israel                         Pass
+Checking Italy                          Pass
+Checking Japan                          Pass
+Checking Luxembourg                     Pass
+Checking Malaysia                       Pass
+Checking Mexico                         Pass
+Checking Netherlands                    Pass
+Checking New Zealand                    Pass
+Checking Norway                         Pass
+Checking Peru                           Pass
+Checking Philippines                    Pass
+Checking Poland                         Pass
+Checking Portugal                       Pass
+Checking Puerto Rico                    Pass
+Checking Russia                         Pass
+Checking Singapore                      Pass
+Checking South Africa                   Pass
+Checking South Korea                    Pass
+Checking Spain                          Pass
+Checking Sweden                         Pass
+Checking Switzerland                    Pass
+Checking Taiwan                         Pass
+Checking Thailand                       Pass
+Checking Turkey                         Pass
+Checking United Kingdom                 Pass
+Checking United States                  Pass
+Checking Venezuela                      Pass
+Checking Vietnam                        Pass
